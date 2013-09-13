@@ -7,10 +7,11 @@ class Window
     // WS_SYSMENU: enables the context menu with the move, close, maximize, minize... commands (shift + right-click on the task bar item)
     // HOWEVER, this also enables the menu with the maximize buttons in the title bar, which will exist inside your client area and are clickable. 
     // WS_CAPTION: enables aero minimize animation/transition
+    // WS_MAXIMIZEBOX, WS_MINIMIZEBOX: enable minimize/maximize
     enum class Style : DWORD
     {
         windowed = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME),
-        aero_borderless = ( WS_POPUP | WS_CAPTION | WS_THICKFRAME)
+        aero_borderless = ( WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
     };
 
 public:
