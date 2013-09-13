@@ -4,14 +4,14 @@ class Window
 {
     // we cannot just use WS_POPUP style
     // WS_THICKFRAME: without this the window cannot be resized and so aero snap, de-maximizing and minimizing won't work
-    // WS_SYSMENU: enables the context menu you get when you right click the titlebar.
-    //  (we have no titlebar, but shift+right click on the task bar item brings up the same menu with close, maximize, minimize, etc.)
+    // WS_SYSMENU: enables the context menu with the move, close, maximize, minize... commands (shift + right-click on the task bar item)
+    // HOWEVER, this means that the buttons actually exist inside your client area and are clickable. 
     // WS_MAXIMIZEBOX, WS_MINIMIZEBOX: enables maximize, minimize
     // WS_CAPTION: enables aero minimize animation/transition
     enum class Style : DWORD
     {
         windowed = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME),
-        aero_borderless = (WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_VISIBLE | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX)
+        aero_borderless = ( WS_POPUP | WS_CAPTION | WS_THICKFRAME)
     };
 
 public:
