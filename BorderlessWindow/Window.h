@@ -5,8 +5,7 @@ class Window
     // we cannot just use WS_POPUP style
     // WS_THICKFRAME: without this the window cannot be resized and so aero snap, de-maximizing and minimizing won't work
     // WS_SYSMENU: enables the context menu with the move, close, maximize, minize... commands (shift + right-click on the task bar item)
-    // HOWEVER, this means that the buttons actually exist inside your client area and are clickable. 
-    // WS_MAXIMIZEBOX, WS_MINIMIZEBOX: enables maximize, minimize
+    // HOWEVER, this also enables the menu with the maximize buttons in the title bar, which will exist inside your client area and are clickable. 
     // WS_CAPTION: enables aero minimize animation/transition
     enum class Style : DWORD
     {
