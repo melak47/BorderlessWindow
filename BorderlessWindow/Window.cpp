@@ -55,7 +55,11 @@ LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
 
         case WM_KEYDOWN:
             {
-                if (wparam == VK_F11) window->toggle_borderless();
+                if (wparam == VK_F11)
+                {
+                    window->toggle_shadow();
+                    window->toggle_borderless();
+                }
                 if (wparam == VK_F12) window->toggle_shadow();
                 return 0;
             }
@@ -73,6 +77,10 @@ void Window::toggle_borderless()
                      static_cast<LONG>(newStyle));
 
     borderless = !borderless;
+    if (newStyle == Style::aero_borderless)
+    {
+        toggle_shadow();
+    }
     //redraw frame
     SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
     show();
