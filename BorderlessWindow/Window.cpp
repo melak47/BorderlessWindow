@@ -53,6 +53,11 @@ LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
                 return 0;
             }
 
+		case WM_NCHITTEST:
+			{
+				if (window->borderless) return HTCAPTION;
+			}
+
         case WM_KEYDOWN:
             {
                 if (wparam == VK_F11)
