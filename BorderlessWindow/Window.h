@@ -17,9 +17,13 @@ class Window
 public:
     HWND hwnd;
     HINSTANCE hinstance;
+    bool closed;
+    //use the toggle_ functions for these
     bool borderless;
     bool aero_shadow;
-    bool closed;
+    //these can be set directly
+    bool borderless_movable;
+    bool borderless_resizeable;
 
     Window();
     ~Window();

@@ -17,7 +17,6 @@ int main()
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
-            std::this_thread::yield();
             //force window to repaint, since we're not actually drawing anything ourselves
             InvalidateRect(window.hwnd, nullptr, true);
         }

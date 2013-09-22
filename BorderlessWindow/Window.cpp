@@ -1,10 +1,13 @@
 #include "Window.h"
 #include <stdexcept>
 #include <dwmapi.h>
+#include <windowsx.h>
 
 Window::Window() : hwnd(0),
                    hinstance(GetModuleHandle(NULL)),
                    borderless(false),
+                   borderless_movable(true),
+                   borderless_resizeable(true),
                    aero_shadow(false),
                    closed(false)
 {
@@ -53,13 +56,74 @@ LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
                 return 0;
             }
 
-		case WM_NCHITTEST:
-			{
-				if (window->borderless) return HTCAPTION;
+        case WM_NCHITTEST:
+            {
+                if (window->borderless)
+                {
+                    if (window->borderless_resizeable)
+                    {
+                        const LONG border_width = 8; //in pixels
+                        RECT winrect;
+                        GetWindowRect(hwnd, &winrect);
+                        long x = GET_X_LPARAM(lparam);
+                        long y = GET_Y_LPARAM(lparam);
+
+                        //bottom left corner
+                        if (x >= winrect.left && x < winrect.left + border_width &&
+                            y < winrect.bottom && y >= winrect.bottom - border_width)
+                        {
+                            return HTBOTTOMLEFT;
+                        }
+                        //bottom right corner
+                        if (x < winrect.right && x >= winrect.right - border_width &&
+                            y < winrect.bottom && y >= winrect.bottom - border_width)
+                        {
+                            return HTBOTTOMRIGHT;
+                        }
+                        //top left corner
+                        if (x >= winrect.left && x < winrect.left + border_width &&
+                            y >= winrect.top && y < winrect.top + border_width)
+                        {
+                            return HTTOPLEFT;
+                        }
+                        //top right corner
+                        if (x < winrect.right && x >= winrect.right - border_width &&
+                            y >= winrect.top && y < winrect.top + border_width)
+                        {
+                            return HTTOPRIGHT;
+                        }
+                        //left border
+                        if (x >= winrect.left && x < winrect.left + border_width)
+                        {
+                            return HTLEFT;
+                        }
+                        //right border
+                        if (x < winrect.right && x >= winrect.right - border_width)
+                        {
+                            return HTRIGHT;
+                        }
+                        //bottom border
+                        if (y < winrect.bottom && y >= winrect.bottom - border_width)
+                        {
+                            return HTBOTTOM;
+                        }
+                        //top border
+                        if (y >= winrect.top && y < winrect.top + border_width)
+                        {
+                            return HTTOP;
+                        }
+                    }
+
+                    if (window->borderless_movable) return HTCAPTION;
+                }
+                break;
 			}
 
         case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
             {
+                if (wparam == VK_F9) window->borderless_movable = !window->borderless_movable;
+                if (wparam == VK_F10) window->borderless_resizeable = !window->borderless_resizeable;
                 if (wparam == VK_F11)
                 {
                     window->toggle_shadow();
