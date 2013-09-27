@@ -2,14 +2,16 @@
 #include <stdexcept>
 #include <dwmapi.h>
 #include <windowsx.h>
+#include <thread>
 
-Window::Window() : hwnd(0),
+BorderlessWindow::BorderlessWindow() : hwnd(0),
                    hinstance(GetModuleHandle(NULL)),
                    borderless(false),
                    borderless_movable(true),
                    borderless_resizeable(true),
                    aero_shadow(false),
-                   closed(false)
+                   closed(false),
+                   visible(false)
 {
     WNDCLASSEX wcx = { 0 };
     wcx.cbSize = sizeof(WNDCLASSEX);
@@ -27,17 +29,20 @@ Window::Window() : hwnd(0),
     if (!hwnd) throw std::runtime_error("couldn't create window because of reasons");
 
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+
+    show();
+    toggle_borderless();
 }
 
-Window::~Window()
+BorderlessWindow::~BorderlessWindow()
 {
     hide();
     DestroyWindow(hwnd);
 }
 
-LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    Window *window = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    BorderlessWindow *window = reinterpret_cast<BorderlessWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     if (!window) return DefWindowProc(hwnd, msg, wparam, lparam);
 
     switch (msg)
@@ -139,23 +144,25 @@ LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
 //link dwmapi.lib
 #pragma comment(lib, "dwmapi.lib")
 
-void Window::toggle_borderless()
+void BorderlessWindow::toggle_borderless()
 {
-    Style newStyle = (borderless) ? Style::windowed : Style::aero_borderless;
-    SetWindowLongPtr(hwnd, GWL_STYLE,
-                     static_cast<LONG>(newStyle));
-
-    borderless = !borderless;
-    if (newStyle == Style::aero_borderless)
+    if (visible)
     {
-        toggle_shadow();
+        Style newStyle = (borderless) ? Style::windowed : Style::aero_borderless;
+        SetWindowLongPtr(hwnd, GWL_STYLE, static_cast<LONG>(newStyle));
+
+        borderless = !borderless;
+        if (newStyle == Style::aero_borderless)
+        {
+            toggle_shadow();
+        }
+        //redraw frame
+        SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+        show();
     }
-    //redraw frame
-    SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
-    show();
 }
 
-void Window::toggle_shadow()
+void BorderlessWindow::toggle_shadow()
 {
     if (borderless)
     {
@@ -166,14 +173,14 @@ void Window::toggle_shadow()
     }
 }
 
-void Window::show()
+void BorderlessWindow::show()
 {
     ShowWindow(hwnd, SW_SHOW);
+    visible = true;
 }
 
-void Window::hide()
+void BorderlessWindow::hide()
 {
     ShowWindow(hwnd, SW_HIDE);
+    visible = false;
 }
-
-

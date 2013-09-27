@@ -6,8 +6,7 @@ int main()
 {
     try
     {
-        Window window;
-        window.show();
+        BorderlessWindow window;
 
         MSG msg = { 0 };
         while (!window.closed)

@@ -1,6 +1,6 @@
 #include <windows.h>
 
-class Window
+class BorderlessWindow
 {
     // we cannot just use WS_POPUP style
     // WS_THICKFRAME: without this the window cannot be resized and so aero snap, de-maximizing and minimizing won't work
@@ -18,6 +18,7 @@ public:
     HWND hwnd;
     HINSTANCE hinstance;
     bool closed;
+    bool visible;
     //use the toggle_ functions for these
     bool borderless;
     bool aero_shadow;
@@ -25,8 +26,8 @@ public:
     bool borderless_movable;
     bool borderless_resizeable;
 
-    Window();
-    ~Window();
+    BorderlessWindow();
+    ~BorderlessWindow();
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
     void toggle_borderless();
     void toggle_shadow();
