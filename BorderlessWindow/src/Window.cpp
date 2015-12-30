@@ -183,7 +183,7 @@ void BorderlessWindow::set_borderless(bool enabled) {
 	}
 }
 
-void BorderlessWindow::set_shadow(bool enabled) {
+void BorderlessWindow::set_shadow(bool enabled) const {
 	if (composition_enabled()) {
 		static const MARGINS shadow_state[2] = {{0,0,0,0},{1,1,1,1}};
 		DwmExtendFrameIntoClientArea(hwnd.get(), &shadow_state[enabled]);

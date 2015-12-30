@@ -36,5 +36,5 @@ private:
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 	void show() const;
-	void set_shadow(bool enabled);
+	void set_shadow(bool enabled) const;
 };
