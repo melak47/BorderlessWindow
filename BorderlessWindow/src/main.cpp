@@ -1,9 +1,8 @@
-#include "Window.h"
 #include <stdexcept>
 #include <typeinfo>
 #include <string>
-#include <thread>
 
+#include "Window.hpp"
 
 int main() try {
     BorderlessWindow window;

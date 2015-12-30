@@ -1,4 +1,4 @@
-#include "Window.h"
+#include "Window.hpp"
 
 #include <cassert>
 #include <stdexcept>
@@ -68,8 +68,7 @@ BorderlessWindow::BorderlessWindow()
 	show();
 }
 
-LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
+LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	if (BorderlessWindow* window_ptr = reinterpret_cast<BorderlessWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA))) {
 		auto& window = *window_ptr;
 
@@ -167,8 +166,7 @@ Style select_borderless_style() {
 	return composition_enabled() ? Style::aero_borderless : Style::basic_borderless;
 }
 
-void BorderlessWindow::set_borderless(bool enabled)
-{
+void BorderlessWindow::set_borderless(bool enabled) {
 	Style new_style = (enabled) ? select_borderless_style() : Style::windowed;
 	Style old_style = static_cast<Style>(GetWindowLongPtr(hwnd.get(), GWL_STYLE));
 
@@ -176,10 +174,8 @@ void BorderlessWindow::set_borderless(bool enabled)
 		SetWindowLongPtr(hwnd.get(), GWL_STYLE, static_cast<LONG>(new_style));
 
 		borderless = enabled;
-		if (new_style != Style::windowed) {
-			//when switching to borderless, apply aero shadow state again
-			set_borderless_shadow(borderless_shadow);
-		}
+		//when switching between borderless and windowed, restore appropriate shadow state
+		set_shadow(borderless_shadow && (new_style != Style::windowed));
 
 		//redraw frame
 		SetWindowPos(hwnd.get(), nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
@@ -187,13 +183,16 @@ void BorderlessWindow::set_borderless(bool enabled)
 	}
 }
 
+void BorderlessWindow::set_shadow(bool enabled) {
+	if (composition_enabled()) {
+		static const MARGINS shadow_state[2] = {{0,0,0,0},{1,1,1,1}};
+		DwmExtendFrameIntoClientArea(hwnd.get(), &shadow_state[enabled]);
+	}
+}
 
-
-void BorderlessWindow::set_borderless_shadow(bool enabled)
-{
-    if (borderless && composition_enabled()) {
-		static const MARGINS shadow_state[2] = { {0,0,0,0}, {1,1,1,1} };
-        DwmExtendFrameIntoClientArea(hwnd.get(), &shadow_state[enabled]);
+void BorderlessWindow::set_borderless_shadow(bool enabled) {
+    if (borderless) {
+		set_shadow(enabled);
 		borderless_shadow = enabled;
     }
 }
