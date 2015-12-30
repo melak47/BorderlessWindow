@@ -19,8 +19,9 @@ void HWND_deleter::operator()(HWND handle) const {
 // WS_CAPTION: enables aero minimize animation/transition
 // WS_MAXIMIZEBOX, WS_MINIMIZEBOX: enable minimize/maximize
 enum class Style : DWORD {
-	windowed = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME),
-	aero_borderless = (WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
+	windowed         = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME),
+	aero_borderless  = (WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX),
+	basic_borderless = (WS_POPUP              | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
 };
 
 
@@ -156,16 +157,26 @@ LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, L
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+bool composition_enabled() {
+	BOOL composition_enabled = false;
+	bool success = DwmIsCompositionEnabled(&composition_enabled) == S_OK;
+	return composition_enabled && success;
+}
+
+Style select_borderless_style() {
+	return composition_enabled() ? Style::aero_borderless : Style::basic_borderless;
+}
+
 void BorderlessWindow::set_borderless(bool enabled)
 {
-	Style new_style = (enabled) ? Style::aero_borderless : Style::windowed;
+	Style new_style = (enabled) ? select_borderless_style() : Style::windowed;
 	Style old_style = static_cast<Style>(GetWindowLongPtr(hwnd.get(), GWL_STYLE));
 
 	if (new_style != old_style) {
 		SetWindowLongPtr(hwnd.get(), GWL_STYLE, static_cast<LONG>(new_style));
 
 		borderless = enabled;
-		if (new_style == Style::aero_borderless) {
+		if (new_style != Style::windowed) {
 			//when switching to borderless, apply aero shadow state again
 			set_borderless_shadow(borderless_shadow);
 		}
@@ -176,9 +187,11 @@ void BorderlessWindow::set_borderless(bool enabled)
 	}
 }
 
+
+
 void BorderlessWindow::set_borderless_shadow(bool enabled)
 {
-    if (borderless) {
+    if (borderless && composition_enabled()) {
 		static const MARGINS shadow_state[2] = { {0,0,0,0}, {1,1,1,1} };
         DwmExtendFrameIntoClientArea(hwnd.get(), &shadow_state[enabled]);
 		borderless_shadow = enabled;
