@@ -19,9 +19,9 @@ void HWND_deleter::operator()(HWND handle) const {
 // WS_CAPTION: enables aero minimize animation/transition
 // WS_MAXIMIZEBOX, WS_MINIMIZEBOX: enable minimize/maximize
 enum class Style : DWORD {
-	windowed         = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME),
-	aero_borderless  = (WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX),
-	basic_borderless = (WS_POPUP              | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
+	windowed         = ( WS_OVERLAPPEDWINDOW | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX ),
+	aero_borderless  = ( WS_POPUP            | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX ),
+	basic_borderless = ( WS_POPUP            | WS_THICKFRAME              | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX )
 };
 
 
@@ -60,12 +60,18 @@ BorderlessWindow::BorderlessWindow()
 
 	static_assert(sizeof(LONG_PTR) == sizeof(this), "sanity check on LONG_PTR size failed!");
 
-	//store pointer to this class instance in window's user data, so we may retrieve it in the Window Procedure
+	// store pointer to this class instance in window's user data, so we may retrieve it in the Window Procedure
     SetWindowLongPtr(hwnd.get(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
 	set_borderless(borderless);
 	set_borderless_shadow(borderless_shadow);
 	show();
+}
+
+bool composition_enabled() {
+	BOOL composition_enabled = false;
+	bool success = DwmIsCompositionEnabled(&composition_enabled) == S_OK;
+	return composition_enabled && success;
 }
 
 LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -74,70 +80,84 @@ LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, L
 
 		switch (msg) {
 			case WM_NCCALCSIZE: {
-				//this kills the window frame and title bar we added with
-				//WS_THICKFRAME and WS_CAPTION
+				// this kills the window frame and title bar we added with
+				// WS_THICKFRAME or WS_CAPTION
 				if (window.borderless) return 0;
 				break;
 			}
 
-			case WM_CLOSE: {
-				window.closed = true;
-				return 0;
+			case WM_NCACTIVATE: {
+				// this prevents the border and title bar appearing when clicking
+				// on non-client area regions of the window.
+				// This only seems to happen with the Windows 7 basic theme.
+				if (window.borderless) return 1;
+				break;
 			}
 
 			case WM_NCHITTEST: {
+				// When we have no border or title bar,
+				// we need to perform our own hit testing
+				// to allow resizing and moving.
 				if (window.borderless) {
 					if (window.borderless_resize) {
-						//do custom hit testing
+						// identify regions as window borders to allow resizing
+						// Note: On Windows 10, windows behave differently and 
+						// allow resizing outside the visible window frame.
+						// This implementation does not replicate that behavior.
 						const LONG border_width = 8; //in pixels
 						RECT winrect;
 						GetWindowRect(hwnd, &winrect);
 						long x = GET_X_LPARAM(lparam);
 						long y = GET_Y_LPARAM(lparam);
 
-						//bottom left corner
+						// bottom left corner
 						if (x >= winrect.left && x < winrect.left + border_width &&
 							y < winrect.bottom && y >= winrect.bottom - border_width) {
 							return HTBOTTOMLEFT;
 						}
-						//bottom right corner
+						// bottom right corner
 						if (x < winrect.right && x >= winrect.right - border_width &&
 							y < winrect.bottom && y >= winrect.bottom - border_width) {
 							return HTBOTTOMRIGHT;
 						}
-						//top left corner
+						// top left corner
 						if (x >= winrect.left && x < winrect.left + border_width &&
 							y >= winrect.top && y < winrect.top + border_width) {
 							return HTTOPLEFT;
 						}
-						//top right corner
+						// top right corner
 						if (x < winrect.right && x >= winrect.right - border_width &&
 							y >= winrect.top && y < winrect.top + border_width) {
 							return HTTOPRIGHT;
 						}
-						//left border
+						// left border
 						if (x >= winrect.left && x < winrect.left + border_width) {
 							return HTLEFT;
 						}
-						//right border
+						// right border
 						if (x < winrect.right && x >= winrect.right - border_width) {
 							return HTRIGHT;
 						}
-						//bottom border
+						// bottom border
 						if (y < winrect.bottom && y >= winrect.bottom - border_width) {
 							return HTBOTTOM;
 						}
-						//top border
+						// top border
 						if (y >= winrect.top && y < winrect.top + border_width) {
 							return HTTOP;
 						}
 					}
 
 					if (window.borderless_move)
-						//allows moving the window by dragging
+						// allows moving the window by dragging anywhere in the client area
 						return HTCAPTION;
 				}
 				break;
+			}
+
+			case WM_CLOSE: {
+				window.closed = true;
+				return 0;
 			}
 
 			case WM_KEYDOWN:
@@ -156,11 +176,6 @@ LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, L
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-bool composition_enabled() {
-	BOOL composition_enabled = false;
-	bool success = DwmIsCompositionEnabled(&composition_enabled) == S_OK;
-	return composition_enabled && success;
-}
 
 Style select_borderless_style() {
 	return composition_enabled() ? Style::aero_borderless : Style::basic_borderless;
@@ -171,13 +186,14 @@ void BorderlessWindow::set_borderless(bool enabled) {
 	Style old_style = static_cast<Style>(GetWindowLongPtr(hwnd.get(), GWL_STYLE));
 
 	if (new_style != old_style) {
+		borderless = enabled;
+
 		SetWindowLongPtr(hwnd.get(), GWL_STYLE, static_cast<LONG>(new_style));
 
-		borderless = enabled;
-		//when switching between borderless and windowed, restore appropriate shadow state
+		// when switching between borderless and windowed, restore appropriate shadow state
 		set_shadow(borderless_shadow && (new_style != Style::windowed));
 
-		//redraw frame
+		// redraw frame
 		SetWindowPos(hwnd.get(), nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
 		show();
 	}
@@ -192,8 +208,8 @@ void BorderlessWindow::set_shadow(bool enabled) const {
 
 void BorderlessWindow::set_borderless_shadow(bool enabled) {
     if (borderless) {
-		set_shadow(enabled);
 		borderless_shadow = enabled;
+		set_shadow(enabled);
     }
 }
 
