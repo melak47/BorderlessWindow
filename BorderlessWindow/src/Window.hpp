@@ -31,7 +31,7 @@ private:
 	bool borderless_move   = true;	// should the window allow moving my dragging the client area
 	bool borderless_shadow = true;  // should the window display a native aero window shadow in borderless mode
 
-	static std::wstring window_class();
+	static const std::wstring& window_class();
 	static HMODULE module_handle();
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 

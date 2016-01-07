@@ -30,23 +30,22 @@ HMODULE BorderlessWindow::module_handle() {
 	return hinstance;
 }
 
-std::wstring BorderlessWindow::window_class() {
+const std::wstring& BorderlessWindow::window_class() {
 
-	static std::wstring window_class_name = []{
-		std::wstring window_class_name = L"BorderlessWindowClass";
+	static const std::wstring window_class_name = []{
 		WNDCLASSEX wcx{};
 		wcx.cbSize = sizeof(wcx);
 		wcx.style = CS_HREDRAW | CS_VREDRAW;
 		wcx.hInstance = module_handle();
 		wcx.lpfnWndProc = &BorderlessWindow::WndProc;
-		wcx.lpszClassName = window_class_name.c_str();
+		wcx.lpszClassName = L"BorderlessWindowClass";
 		wcx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 		wcx.hCursor = LoadCursor(module_handle(), IDC_ARROW);
 		RegisterClassEx(&wcx);
 		if (FAILED(RegisterClassEx(&wcx)))
 			throw std::runtime_error("failed to register window class");
 
-		return window_class_name;
+		return wcx.lpszClassName;
 	}();
 	return window_class_name;
 }
