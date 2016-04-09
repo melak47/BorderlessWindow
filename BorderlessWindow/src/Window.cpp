@@ -41,8 +41,8 @@ const std::wstring& BorderlessWindow::window_class() {
 		wcx.lpszClassName = L"BorderlessWindowClass";
 		wcx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 		wcx.hCursor = LoadCursor(module_handle(), IDC_ARROW);
-		RegisterClassEx(&wcx);
-		if (FAILED(RegisterClassEx(&wcx)))
+		const HRESULT result = RegisterClassEx(&wcx);
+		if (FAILED(result))
 			throw std::runtime_error("failed to register window class");
 
 		return wcx.lpszClassName;
