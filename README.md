@@ -4,7 +4,9 @@ BorderlessWindow
 This sample application demonstrates the necessary WinAPI calls and window 
 messages to handle to produce a resizable, borderless window (similar to Steam, GitHub for Windows).
 
-![sample](https://cloud.githubusercontent.com/assets/3340026/20038871/36bb61f8-a43b-11e6-8463-df9a9b192cb9.png)
+
+
+![sample](https://cloud.githubusercontent.com/assets/3340026/20039089/69b3b2f6-a43e-11e6-8a44-21599a34ceba.png)
 
 The borderless window can be resized, moved, and also supports all the Aero features a regular window has:
 
