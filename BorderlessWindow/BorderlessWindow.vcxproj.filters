@@ -18,12 +18,12 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Window.cpp">
+    <ClCompile Include="src\BorderlessWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Window.hpp">
+    <ClInclude Include="src\BorderlessWindow.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-#include "Window.hpp"
+#include "BorderLessWindow.hpp"
 
 #include <cassert>
 #include <stdexcept>

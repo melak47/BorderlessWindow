@@ -2,7 +2,7 @@
 #include <typeinfo>
 #include <string>
 
-#include "Window.hpp"
+#include "BorderlessWindow.hpp"
 
 int main() try {
 	BorderlessWindow window;
