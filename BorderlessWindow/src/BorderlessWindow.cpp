@@ -165,6 +165,15 @@ LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, L
 				}
 				break;
 			}
+			case WM_NCACTIVATE: {
+				if (!composition_enabled()) {
+					// Prevents window frame reappearing on windwo activation
+					// in "basic" theme, where no aero shadow is present.
+					return 1;
+				}
+				break;
+			}
+
 
 			case WM_CLOSE: {
 				window.closed = true;
