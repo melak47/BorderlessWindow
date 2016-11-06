@@ -22,7 +22,7 @@
     <ProjectGuid>{D8F4471A-632B-42FA-AA96-42F9830F825A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>BorderlessWindow</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

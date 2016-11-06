@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <string>
 
@@ -7,15 +8,16 @@
 
 struct HWND_deleter {
 	using pointer = HWND;
-	void operator()(HWND handle) const;
+	void operator()(pointer handle) const  {
+		assert(::DestroyWindow(handle) == TRUE);
+	}
 };
 
 using unique_hwnd = std::unique_ptr<HWND__, HWND_deleter>;
 
-class BorderlessWindow
-{
+class BorderlessWindow {
 public:
-    BorderlessWindow();
+	BorderlessWindow();
 	bool is_closed() const { return closed; }
 	HWND handle() const { return hwnd.get(); }
 
@@ -31,10 +33,11 @@ private:
 	bool borderless_move   = true;	// should the window allow moving my dragging the client area
 	bool borderless_shadow = true;  // should the window display a native aero window shadow in borderless mode
 
-	static const std::wstring& window_class();
+	static const wchar_t* window_class();
 	static HMODULE module_handle();
-    static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 	void show() const;
 	void set_shadow(bool enabled) const;
+	LRESULT hit_test(POINT point) const;
 };

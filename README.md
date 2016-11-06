@@ -1,24 +1,29 @@
 BorderlessWindow
 ================
 
-This is a win32 application that seeks to demonstrate how to achieve a borderless 
-window look, similar to Steam, GitHub for Windows and other applications:
+This sample application demonstrates the necessary WinAPI calls and window 
+messages to handle to produce a resizable, borderless window (similar to Steam, GitHub for Windows).
 
-![sample](https://cloud.githubusercontent.com/assets/3340026/12052255/47bc05b2-af0d-11e5-9cb7-e9d9a3691a79.png)
+![sample](https://cloud.githubusercontent.com/assets/3340026/20038871/36bb61f8-a43b-11e6-8463-df9a9b192cb9.png)
 
-This example application supports resizing, dragging, and all the Aero features
-- Aero Snap 
-- Aero Shake
-- Animations when minimizing, maximizing, restoring, snapping
+The borderless window can be resized, moved, and also supports all the Aero features a regular window has:
+
+- snapping to desktop halves/quadrants
+- shake to minimize all other windows
+- animations when minimizing, maximizing, restoring, snapping
 - native soft shadow around the window
 
-and should work on Windows 7, 8/8.1 and 10.
+The sample should work on Windows 7, 8/8.1 and 10.
 
 What this example does *not* do:
+
 - Draw anything to the client area. You will need to fill the entire window with an opaque color, or the window frame may be visible inside your client area in borderless mode. 
   In my use case I simply fill the D3D backbuffer covering the window's client area.
 - Calculate proper client/window size in windowed mode. You will need to use [AdjustWindowRect](https://msdn.microsoft.com/en-us/library/windows/desktop/ms632665(v=vs.85).aspx) and friends to calculate the correct window size for a desired client area size.
 
-Keybinds: 
+Keybinds:
+
+- F8  enables/disables dragging in the borderless window to move it 
+- F9  enables/disables resizing the borderless window
 - F10 toggles between borderless and windowed mode
 - F11 toggles the aero shadow when in borderless mode
