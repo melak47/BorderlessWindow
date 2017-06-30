@@ -1,4 +1,4 @@
-#include "BorderLessWindow.hpp"
+﻿#include "BorderLessWindow.hpp"
 
 #include <cassert>
 #include <stdexcept>
@@ -21,6 +21,41 @@ enum class Style : DWORD {
 	basic_borderless = WS_POPUP            | WS_THICKFRAME              | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX
 };
 
+namespace {
+	auto maximized(HWND hwnd) -> bool {
+		WINDOWPLACEMENT placement;
+		if (!::GetWindowPlacement(hwnd, &placement)) {
+			return false;
+		}
+
+		return placement.showCmd == SW_MAXIMIZE;
+	}
+
+	/* Adjust client rect to not spill over monitor edges when maximized.
+	 * rect(in/out): in: proposed window rect, out: calculated client rect
+	 * Does nothing if the window is not maximized.
+	 */
+	auto adjust_maximized_client_rect(HWND window, RECT& rect) -> void {
+		if (!maximized(window)) {
+			return;
+		}
+
+		auto monitor = ::MonitorFromWindow(window, MONITOR_DEFAULTTONULL);
+		if (!monitor) {
+			return;
+		}
+
+		MONITORINFO monitor_info{};
+		monitor_info.cbSize = sizeof(monitor_info);
+		if (!::GetMonitorInfoW(monitor, &monitor_info)) {
+			return;
+		}
+
+		// when maximized, make the client area fill just the monitor (without task bar) rect,
+		// not the whole window rect which extends beyond the monitor.
+		rect = monitor_info.rcWork;
+	}
+}
 
 HMODULE BorderlessWindow::module_handle() {
 	static HMODULE hinstance = ::GetModuleHandle(nullptr);
@@ -147,9 +182,11 @@ LRESULT CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, L
 
 		switch (msg) {
 			case WM_NCCALCSIZE: {
-				// this kills the window frame and title bar we added with
-				// WS_THICKFRAME or WS_CAPTION
-				if (window.borderless) return 0;
+				if (wparam == TRUE && window.borderless) {
+					auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
+					adjust_maximized_client_rect(hwnd, params.rgrc[0]);
+					return 0;
+				}
 				break;
 			}
 			case WM_NCHITTEST: {
