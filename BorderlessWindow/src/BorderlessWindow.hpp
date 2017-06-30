@@ -5,6 +5,10 @@
 
 #include <Windows.h>
 
+#include <d2d1.h>
+#pragma comment(lib, "d2d1.lib")
+
+
 struct hwnd_deleter {
     using pointer = HWND;
     auto operator()(HWND handle) const -> void {
@@ -13,6 +17,15 @@ struct hwnd_deleter {
 };
 
 using unique_handle = std::unique_ptr<HWND, hwnd_deleter>;
+
+struct com_deleter {
+    auto operator()(IUnknown* ptr) {
+        ptr->Release();
+    }
+};
+
+template<typename T>
+using com_ptr = std::unique_ptr<T, com_deleter>;
 
 class BorderlessWindow {
 public:
@@ -30,4 +43,7 @@ private:
     bool borderless_shadow = true; // should the window display a native aero shadow while borderless
 
     unique_handle handle;
+
+    com_ptr<ID2D1DCRenderTarget>  rt;
+    com_ptr<ID2D1SolidColorBrush> brush;
 };

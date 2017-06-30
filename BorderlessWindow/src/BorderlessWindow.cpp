@@ -116,6 +116,36 @@ BorderlessWindow::BorderlessWindow()
 {
     set_borderless(borderless);
     set_borderless_shadow(borderless_shadow);
+
+    ID2D1Factory* factory_temp;
+    if (FAILED(::D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory_temp))) {
+        throw std::runtime_error("failed to D2D1CreateFactory");
+    }
+    com_ptr<ID2D1Factory> factory{factory_temp};
+
+    auto props = D2D1::RenderTargetProperties(
+        D2D1_RENDER_TARGET_TYPE_DEFAULT,
+        D2D1::PixelFormat(
+            DXGI_FORMAT_B8G8R8A8_UNORM,
+            D2D1_ALPHA_MODE_PREMULTIPLIED
+        ),
+        0,
+        0,
+        D2D1_RENDER_TARGET_USAGE_NONE,
+        D2D1_FEATURE_LEVEL_DEFAULT
+    );
+    ID2D1DCRenderTarget* rt_temp;
+    if (FAILED(factory->CreateDCRenderTarget(&props, &rt_temp))) {
+        throw std::runtime_error("failed to CreateDCRenderTarget");
+    }
+    rt.reset(rt_temp);
+
+    ID2D1SolidColorBrush* brush_temp;
+    if (FAILED(rt->CreateSolidColorBrush(D2D1::ColorF(0.4f, 0.4f, 0.4f, 1), &brush_temp))) {
+        throw std::runtime_error("failed to CreateSolidColorBrush");
+    }
+    brush.reset(brush_temp);
+
     ::ShowWindow(handle.get(), SW_SHOW);
 }
 
@@ -201,6 +231,28 @@ auto CALLBACK BorderlessWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
                     case VK_F11: { window.set_borderless_shadow(!window.borderless_shadow); return 0; }
                 }
                 break;
+            }
+
+            case WM_PAINT: {
+                PAINTSTRUCT paint;
+                auto dc = ::BeginPaint(hwnd, &paint);
+                RECT client;
+                ::GetClientRect(hwnd, &client);
+
+                window.rt->BindDC(dc, &client);
+                window.rt->BeginDraw();
+
+                window.rt->FillRectangle(
+                    D2D1::RectF(
+                        static_cast<float>(client.left ), static_cast<float>(client.top),
+                        static_cast<float>(client.right), static_cast<float>(client.bottom)
+                    ),
+                    window.brush.get()
+                );
+
+                window.rt->EndDraw();
+                ::EndPaint(hwnd, &paint);
+                return 0;
             }
         }
     }
