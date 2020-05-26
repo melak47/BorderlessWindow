@@ -6,8 +6,6 @@
 #include <Windows.h>
 #include <windowsx.h>
 #include <dwmapi.h>
-#pragma comment(lib, "dwmapi.lib")
-
 
 namespace {
     // we cannot just use WS_POPUP style
