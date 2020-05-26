@@ -86,7 +86,7 @@ namespace {
     }
 
     auto select_borderless_style() -> Style {
-     return composition_enabled() ? Style::aero_borderless : Style::basic_borderless;
+        return composition_enabled() ? Style::aero_borderless : Style::basic_borderless;
     }
 
     auto set_shadow(HWND handle, bool enabled) -> void {
@@ -96,7 +96,7 @@ namespace {
         }
     }
 
-    auto create_window(WNDPROC wndproc, void* userdata) -> unique_handle {
+    auto create_window(WNDPROC wndproc, void* userdata) -> HWND {
         auto handle = CreateWindowExW(
             0, window_class(wndproc), L"Borderless Window",
             static_cast<DWORD>(Style::aero_borderless), CW_USEDEFAULT, CW_USEDEFAULT,
@@ -105,7 +105,7 @@ namespace {
         if (!handle) {
             throw last_error("failed to create window");
         }
-        return unique_handle{handle};
+        return handle;
     }
 }
 
@@ -114,31 +114,31 @@ BorderlessWindow::BorderlessWindow()
 {
     set_borderless(borderless);
     set_borderless_shadow(borderless_shadow);
-    ::ShowWindow(handle.get(), SW_SHOW);
+    ::ShowWindow(handle, SW_SHOW);
 }
 
 void BorderlessWindow::set_borderless(bool enabled) {
     Style new_style = (enabled) ? select_borderless_style() : Style::windowed;
-    Style old_style = static_cast<Style>(::GetWindowLongPtrW(handle.get(), GWL_STYLE));
+    Style old_style = static_cast<Style>(::GetWindowLongPtrW(handle, GWL_STYLE));
 
     if (new_style != old_style) {
         borderless = enabled;
 
-        ::SetWindowLongPtrW(handle.get(), GWL_STYLE, static_cast<LONG>(new_style));
+        ::SetWindowLongPtrW(handle, GWL_STYLE, static_cast<LONG>(new_style));
 
         // when switching between borderless and windowed, restore appropriate shadow state
-        set_shadow(handle.get(), borderless_shadow && (new_style != Style::windowed));
+        set_shadow(handle, borderless_shadow && (new_style != Style::windowed));
 
         // redraw frame
-        ::SetWindowPos(handle.get(), nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
-        ::ShowWindow(handle.get(), SW_SHOW);
+        ::SetWindowPos(handle, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+        ::ShowWindow(handle, SW_SHOW);
     }
 }
 
 void BorderlessWindow::set_borderless_shadow(bool enabled) {
     if (borderless) {
         borderless_shadow = enabled;
-        set_shadow(handle.get(), enabled);
+        set_shadow(handle, enabled);
     }
 }
 
@@ -216,7 +216,7 @@ auto BorderlessWindow::hit_test(POINT cursor) const -> LRESULT {
         ::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)
     };
     RECT window;
-    if (!::GetWindowRect(handle.get(), &window)) {
+    if (!::GetWindowRect(handle, &window)) {
         return HTNOWHERE;
     }
 

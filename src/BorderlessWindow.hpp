@@ -1,18 +1,6 @@
 ﻿#pragma once
 
-#include <memory>
-#include <string>
-
 #include <Windows.h>
-
-struct hwnd_deleter {
-    using pointer = HWND;
-    auto operator()(HWND handle) const -> void {
-        ::DestroyWindow(handle);
-    }
-};
-
-using unique_handle = std::unique_ptr<HWND, hwnd_deleter>;
 
 class BorderlessWindow {
 public:
@@ -29,5 +17,5 @@ private:
     bool borderless_drag   = true; // should the window allow moving my dragging the client area
     bool borderless_shadow = true; // should the window display a native aero shadow while borderless
 
-    unique_handle handle;
+    HWND handle;
 };
