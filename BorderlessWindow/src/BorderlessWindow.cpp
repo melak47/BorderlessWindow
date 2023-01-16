@@ -23,6 +23,7 @@ namespace {
 
     auto maximized(HWND hwnd) -> bool {
         WINDOWPLACEMENT placement;
+        placement.length = sizeof(WINDOWPLACEMENT);
         if (!::GetWindowPlacement(hwnd, &placement)) {
               return false;
         }
